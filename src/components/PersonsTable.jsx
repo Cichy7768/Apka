@@ -69,7 +69,7 @@ export default function PersonsTable() {
   if (loading) return <div className="flex justify-center py-20 text-muted-foreground">Ładowanie...</div>
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full min-w-0">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Osoby ({persons.length})</h2>
         <Button size="sm" onClick={() => { setEditPerson(null); setFormOpen(true) }}>
@@ -85,53 +85,53 @@ export default function PersonsTable() {
         />
       )}
 
-      <div className="rounded-lg border overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="sticky left-0 bg-card z-10 min-w-[120px]">Imię</TableHead>
+      <div className="w-full rounded-lg border overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-[860px] caption-bottom text-sm">
+            <thead className="[&_tr]:border-b">
+              <tr className="border-b transition-colors hover:bg-muted/50">
+                <th className="sticky left-0 bg-card z-10 w-[110px] px-3 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap shadow-[1px_0_0_0_hsl(var(--border))]">Imię</th>
                 {COLUMNS.map(c => (
-                  <TableHead key={c.key} className="text-center whitespace-nowrap">{c.label}</TableHead>
+                  <th key={c.key} className="px-3 py-3 text-center text-xs font-medium text-muted-foreground whitespace-nowrap">{c.label}</th>
                 ))}
-                <TableHead className="text-center">Wynik</TableHead>
-                <TableHead className="text-center">Akcje</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+                <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground whitespace-nowrap">Wynik</th>
+                <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground whitespace-nowrap">Akcje</th>
+              </tr>
+            </thead>
+            <tbody className="[&_tr:last-child]:border-0">
               {persons.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={COLUMNS.length + 3} className="text-center text-muted-foreground py-16">
+                <tr>
+                  <td colSpan={COLUMNS.length + 3} className="text-center text-muted-foreground py-16">
                     Brak osób. Kliknij "Dodaj osobę" aby zacząć.
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ) : (
                 persons.map(person => (
-                  <TableRow key={person.id}>
-                    <TableCell className="font-medium sticky left-0 bg-background z-10 whitespace-nowrap">
+                  <tr key={person.id} className="border-b transition-colors hover:bg-muted/30">
+                    <td className="sticky left-0 bg-background z-10 px-3 py-2.5 font-medium whitespace-nowrap shadow-[1px_0_0_0_hsl(var(--border))]">
                       {person.name}
-                    </TableCell>
+                    </td>
                     {COLUMNS.map(c => (
-                      <TableCell key={c.key} className="text-center whitespace-nowrap">
+                      <td key={c.key} className="px-3 py-2.5 text-center whitespace-nowrap text-sm">
                         {displayVal(c.key, person[c.key])}
-                      </TableCell>
+                      </td>
                     ))}
-                    <TableCell className="text-center">{scoreChip(calculateScore(person))}</TableCell>
-                    <TableCell>
+                    <td className="px-3 py-2.5 text-center">{scoreChip(calculateScore(person))}</td>
+                    <td className="px-3 py-2.5">
                       <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => { setEditPerson(person); setFormOpen(true) }}>
-                          <Pencil className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditPerson(person); setFormOpen(true) }}>
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(person.id)}>
-                          <Trash2 className="h-4 w-4 text-red-400" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(person.id)}>
+                          <Trash2 className="h-3.5 w-3.5 text-red-400" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
