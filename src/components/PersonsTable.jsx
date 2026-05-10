@@ -23,6 +23,9 @@ const COLUMNS = [
 
 const ZAJAWKI_EMOJI = { 1: '😐', 2: '🙂', 3: '😊', 4: '🔥', 5: '🔥🔥' }
 
+const avatarUrl = (name) =>
+  `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(name)}&backgroundColor=transparent`
+
 function scoreChip(score) {
   let cls = 'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-bold '
   if (score >= 60) cls += 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -109,7 +112,14 @@ export default function PersonsTable() {
                 persons.map(person => (
                   <tr key={person.id} className="border-b transition-colors hover:bg-muted/30">
                     <td className="sticky left-0 bg-background z-10 px-3 py-2.5 font-medium whitespace-nowrap shadow-[1px_0_0_0_hsl(var(--border))]">
-                      {person.name}
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={avatarUrl(person.name)}
+                          alt={person.name}
+                          className="w-8 h-8 rounded-full bg-muted shrink-0"
+                        />
+                        {person.name}
+                      </div>
                     </td>
                     {COLUMNS.map(c => (
                       <td key={c.key} className="px-3 py-2.5 text-center whitespace-nowrap text-sm">

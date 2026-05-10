@@ -17,6 +17,9 @@ const PALETTE = [
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
+const avatarUrl = (name) =>
+  `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(name)}&backgroundColor=transparent`
+
 const CHART_TYPES = [
   { id: 'horizontal', label: 'Poziome',  icon: AlignLeft  },
   { id: 'vertical',   label: 'Pionowe',  icon: BarChart2  },
@@ -146,7 +149,7 @@ export default function RankingChart({ session }) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {ranked.slice(0, 3).map((person, i) => (
                 <Card key={person.id} className={i === 0 ? 'border-yellow-500/50 bg-yellow-500/5' : ''}>
-                  <CardContent className="pt-6 text-center relative">
+                  <CardContent className="pt-5 text-center relative">
                     {session && (
                       <div className="absolute top-2 right-2 flex gap-1">
                         <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => openEdit(person)}>
@@ -157,8 +160,15 @@ export default function RankingChart({ session }) {
                         </Button>
                       </div>
                     )}
-                    <div className="text-4xl mb-2">{MEDALS[i]}</div>
-                    <p className="font-bold text-lg leading-tight">{person.name}</p>
+                    <div className="relative inline-block mb-2">
+                      <img
+                        src={avatarUrl(person.name)}
+                        alt={person.name}
+                        className="w-16 h-16 rounded-full bg-muted mx-auto"
+                      />
+                      <span className="absolute -bottom-1 -right-1 text-xl leading-none">{MEDALS[i]}</span>
+                    </div>
+                    <p className="font-bold text-lg leading-tight mt-1">{person.name}</p>
                     <p className="text-3xl font-black mt-1" style={{ color: PALETTE[i] }}>{person.score}</p>
                     <p className="text-xs text-muted-foreground">pkt</p>
                   </CardContent>
@@ -305,9 +315,10 @@ export default function RankingChart({ session }) {
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
                   {ranked.map((person, i) => (
-                    <div key={person.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                    <div key={person.id} className="flex items-center justify-between px-4 py-2 hover:bg-muted/30 transition-colors">
                       <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground text-sm w-6 text-right">{i + 1}.</span>
+                        <span className="text-muted-foreground text-sm w-6 text-right shrink-0">{i + 1}.</span>
+                        <img src={avatarUrl(person.name)} alt={person.name} className="w-8 h-8 rounded-full bg-muted shrink-0" />
                         <span className="font-medium">{person.name}</span>
                         <span className="text-sm font-bold" style={{ color: PALETTE[i] ?? PALETTE[PALETTE.length - 1] }}>
                           {person.score} pkt
