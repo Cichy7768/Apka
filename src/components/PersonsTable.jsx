@@ -24,7 +24,7 @@ const COLUMNS = [
 const ZAJAWKI_EMOJI = { 1: '😐', 2: '🙂', 3: '😊', 4: '🔥', 5: '🔥🔥' }
 
 const avatarUrl = (name) =>
-  `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(name)}&backgroundColor=transparent`
+  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`
 
 function scoreChip(score) {
   let cls = 'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-bold '
