@@ -11,14 +11,14 @@ import { Lock, LogOut, Heart } from 'lucide-react'
 export default function App() {
   const [session, setSession]     = useState(null)
   const [showLogin, setShowLogin] = useState(false)
-  const [activeTab, setActiveTab] = useState('ranking')
+  const [activeTab, setActiveTab] = useState('wydarzenia')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (!session) setActiveTab('ranking')
+      if (!session) setActiveTab('wydarzenia')
     })
 
     return () => subscription.unsubscribe()
@@ -26,7 +26,7 @@ export default function App() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    setActiveTab('ranking')
+    setActiveTab('wydarzenia')
   }
 
   return (
@@ -63,18 +63,20 @@ export default function App() {
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="ranking">Ranking</TabsTrigger>
             <TabsTrigger value="wydarzenia">Wydarzenia</TabsTrigger>
+            {session && <TabsTrigger value="ranking">Ranking</TabsTrigger>}
             {session && <TabsTrigger value="osoby">Osoby</TabsTrigger>}
           </TabsList>
-
-          <TabsContent value="ranking">
-            <RankingChart session={session} />
-          </TabsContent>
 
           <TabsContent value="wydarzenia">
             <EventsModule session={session} />
           </TabsContent>
+
+          {session && (
+            <TabsContent value="ranking">
+              <RankingChart session={session} />
+            </TabsContent>
+          )}
 
           {session && (
             <TabsContent value="osoby">
