@@ -69,7 +69,7 @@ export default function App() {
           </TabsList>
 
           <TabsContent value="ranking">
-            <RankingChart />
+            <RankingChart session={session} />
           </TabsContent>
 
           <TabsContent value="wydarzenia">
