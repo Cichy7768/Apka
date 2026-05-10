@@ -3,10 +3,11 @@ import { supabase } from '@/lib/supabase'
 import { calculateScore } from '@/lib/scoring'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie, Legend, RadialBarChart, RadialBar, ComposedChart,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
-import { Trophy, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Trophy, Plus, Pencil, Trash2, AlignLeft, BarChart2, Circle, Donut, Radar } from 'lucide-react'
 import PersonForm from './PersonForm'
 
 const PALETTE = [
@@ -16,6 +17,15 @@ const PALETTE = [
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
+const CHART_TYPES = [
+  { id: 'horizontal', label: 'Poziome',  icon: AlignLeft  },
+  { id: 'vertical',   label: 'Pionowe',  icon: BarChart2  },
+  { id: 'lollipop',   label: 'Wyścig',   icon: Circle     },
+  { id: 'donut',      label: 'Donut',    icon: Donut      },
+  { id: 'radial',     label: 'Radialny', icon: Radar      },
+]
+
+/* ── Tooltip ── */
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null
   return (
@@ -28,10 +38,49 @@ const CustomTooltip = ({ active, payload }) => {
   )
 }
 
+const PieTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null
+  const { name, score, percent } = payload[0].payload
+  return (
+    <div className="rounded-lg border bg-popover p-3 shadow-md text-sm">
+      <p className="font-semibold">{name}</p>
+      <p className="text-muted-foreground">
+        Wynik: <span className="text-foreground font-bold">{score}</span>
+        {' '}·{' '}
+        <span className="font-bold">{(percent * 100).toFixed(1)}%</span>
+      </p>
+    </div>
+  )
+}
+
+/* ── Lollipop custom shape ── */
+const LollipopShape = (props) => {
+  const { x, y, width, height, fill } = props
+  const cx = x + width
+  const cy = y + height / 2
+  return (
+    <g>
+      <line x1={x} y1={cy} x2={cx - 6} y2={cy} stroke={fill} strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={7} fill={fill} stroke="hsl(var(--background))" strokeWidth={2} />
+    </g>
+  )
+}
+
+/* ── Radial custom label ── */
+const RadialLabel = ({ cx, cy, innerRadius, outerRadius, midAngle, name, score }) => {
+  const RADIAN = Math.PI / 180
+  const r = innerRadius + (outerRadius - innerRadius) * 0.5
+  const x = cx + r * Math.cos(-midAngle * RADIAN)
+  const y = cy + r * Math.sin(-midAngle * RADIAN)
+  return null // handled by built-in label
+}
+
+/* ════════════════════════════════════════════════════════════ */
 export default function RankingChart({ session }) {
-  const [persons, setPersons]   = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [formOpen, setFormOpen] = useState(false)
+  const [persons,    setPersons]    = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [chartType,  setChartType]  = useState('horizontal')
+  const [formOpen,   setFormOpen]   = useState(false)
   const [editPerson, setEditPerson] = useState(null)
 
   const fetchPersons = useCallback(async () => {
@@ -43,35 +92,27 @@ export default function RankingChart({ session }) {
 
   useEffect(() => { fetchPersons() }, [fetchPersons])
 
-  const handleSave = () => {
-    setFormOpen(false)
-    setEditPerson(null)
-    fetchPersons()
-  }
-
+  const handleSave = () => { setFormOpen(false); setEditPerson(null); fetchPersons() }
   const handleDelete = async (id, name) => {
     if (!confirm(`Na pewno usunąć "${name}"?`)) return
     await supabase.from('persons').delete().eq('id', id)
     fetchPersons()
   }
-
-  const openEdit = (person) => {
-    setEditPerson(person)
-    setFormOpen(true)
-  }
+  const openEdit = (person) => { setEditPerson(person); setFormOpen(true) }
 
   const ranked = [...persons]
     .map(p => ({ ...p, score: calculateScore(p) }))
     .sort((a, b) => b.score - a.score)
 
-  const chartData = ranked.map(p => ({ name: p.name, score: p.score }))
+  const chartData = ranked.map((p, i) => ({ ...p, fill: PALETTE[i] ?? PALETTE[PALETTE.length - 1] }))
 
+  /* ── Empty state ── */
   if (loading) return <div className="flex justify-center py-20 text-muted-foreground">Ładowanie...</div>
 
   return (
     <div className="space-y-6">
 
-      {/* Przycisk dodawania — tylko dla admina */}
+      {/* Admin: dodaj */}
       {session && (
         <div className="flex justify-end">
           <Button size="sm" onClick={() => { setEditPerson(null); setFormOpen(true) }}>
@@ -108,18 +149,10 @@ export default function RankingChart({ session }) {
                   <CardContent className="pt-6 text-center relative">
                     {session && (
                       <div className="absolute top-2 right-2 flex gap-1">
-                        <Button
-                          variant="ghost" size="icon"
-                          className="h-6 w-6 opacity-50 hover:opacity-100"
-                          onClick={() => openEdit(person)}
-                        >
+                        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => openEdit(person)}>
                           <Pencil className="h-3 w-3" />
                         </Button>
-                        <Button
-                          variant="ghost" size="icon"
-                          className="h-6 w-6 opacity-50 hover:opacity-100"
-                          onClick={() => handleDelete(person.id, person.name)}
-                        >
+                        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100" onClick={() => handleDelete(person.id, person.name)}>
                           <Trash2 className="h-3 w-3 text-red-400" />
                         </Button>
                       </div>
@@ -134,41 +167,136 @@ export default function RankingChart({ session }) {
             </div>
           )}
 
-          {/* Wykres */}
+          {/* Wykres z przełącznikiem */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                Ranking punktowy
-              </CardTitle>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  Ranking punktowy
+                </CardTitle>
+                {/* Przełącznik typów wykresu */}
+                <div className="flex gap-1 flex-wrap">
+                  {CHART_TYPES.map(({ id, label, icon: Icon }) => (
+                    <Button
+                      key={id}
+                      variant={chartType === id ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1"
+                      onClick={() => setChartType(id)}
+                    >
+                      <Icon className="h-3 w-3" />
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={Math.max(280, ranked.length * 44)}>
-                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                  <XAxis
-                    type="number"
-                    domain={[0, 'auto']}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={110}
-                    tick={{ fill: 'hsl(var(--foreground))', fontSize: 13 }}
-                  />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-                  <Bar dataKey="score" radius={[0, 4, 4, 0]} label={{ position: 'right', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}>
-                    {chartData.map((_, i) => (
-                      <Cell key={i} fill={PALETTE[i] ?? PALETTE[PALETTE.length - 1]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+
+              {/* 1 — Poziome słupki */}
+              {chartType === 'horizontal' && (
+                <ResponsiveContainer width="100%" height={Math.max(280, ranked.length * 44)}>
+                  <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                    <XAxis type="number" domain={[0, 'auto']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                    <YAxis type="category" dataKey="name" width={110} tick={{ fill: 'hsl(var(--foreground))', fontSize: 13 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                    <Bar dataKey="score" radius={[0, 4, 4, 0]} label={{ position: 'right', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}>
+                      {chartData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {/* 2 — Pionowe słupki */}
+              {chartType === 'vertical' && (
+                <ResponsiveContainer width="100%" height={360}>
+                  <BarChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }} angle={-35} textAnchor="end" interval={0} />
+                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                    <Bar dataKey="score" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}>
+                      {chartData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {/* 3 — Lollipop (Wyścig) */}
+              {chartType === 'lollipop' && (
+                <ResponsiveContainer width="100%" height={Math.max(280, ranked.length * 44)}>
+                  <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                    <XAxis type="number" domain={[0, 'auto']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                    <YAxis type="category" dataKey="name" width={110} tick={{ fill: 'hsl(var(--foreground))', fontSize: 13 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                    <Bar dataKey="score" shape={<LollipopShape />} label={{ position: 'right', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}>
+                      {chartData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {/* 4 — Donut */}
+              {chartType === 'donut' && (
+                <ResponsiveContainer width="100%" height={380}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%" cy="50%"
+                      innerRadius="45%"
+                      outerRadius="70%"
+                      dataKey="score"
+                      nameKey="name"
+                      paddingAngle={2}
+                      label={({ name, score }) => `${name}: ${score}`}
+                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
+                    >
+                      {chartData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                    </Pie>
+                    <Tooltip content={<PieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+
+              {/* 5 — Radialny */}
+              {chartType === 'radial' && (
+                <ResponsiveContainer width="100%" height={400}>
+                  <RadialBarChart
+                    data={[...chartData].reverse()}
+                    cx="50%" cy="50%"
+                    innerRadius="15%"
+                    outerRadius="90%"
+                    startAngle={180}
+                    endAngle={-180}
+                  >
+                    <RadialBar
+                      dataKey="score"
+                      background={{ fill: 'hsl(var(--muted))' }}
+                      label={{ position: 'insideStart', fill: 'hsl(var(--background))', fontSize: 11, fontWeight: 'bold' }}
+                    >
+                      {[...chartData].reverse().map((d, i) => <Cell key={i} fill={d.fill} />)}
+                    </RadialBar>
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      formatter={(value, entry) => (
+                        <span style={{ color: 'hsl(var(--foreground))', fontSize: 12 }}>
+                          {entry.payload.name} · {entry.payload.score}
+                        </span>
+                      )}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+              )}
+
             </CardContent>
           </Card>
 
-          {/* Lista z akcjami — tylko dla admina */}
+          {/* Admin: lista z akcjami */}
           {session && (
             <Card>
               <CardHeader>

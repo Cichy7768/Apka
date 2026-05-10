@@ -18,7 +18,10 @@ const COLUMNS = [
   { key: 'wspolne_tematy',label: 'Tematy' },
   { key: 'zabawna',       label: 'Zabawna' },
   { key: 'dystans_i_luz', label: 'Luz' },
+  { key: 'zajawki',       label: '⚡ Zajawki' },
 ]
+
+const ZAJAWKI_EMOJI = { 1: '😐', 2: '🙂', 3: '😊', 4: '🔥', 5: '🔥🔥' }
 
 function scoreChip(score) {
   let cls = 'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-bold '
@@ -32,6 +35,7 @@ function scoreChip(score) {
 function displayVal(key, value) {
   if (value === null || value === undefined) return <span className="text-muted-foreground">—</span>
   if (key === 'wspolne_tematy') return value >= 4 ? '4+' : value
+  if (key === 'zajawki') return ZAJAWKI_EMOJI[value] ? `${ZAJAWKI_EMOJI[value]} ${value}` : value
   return value
 }
 
