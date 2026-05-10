@@ -18,7 +18,7 @@ const PALETTE = [
 const MEDALS = ['🥇', '🥈', '🥉']
 
 const avatarUrl = (name) =>
-  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(name)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&gender=female`
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(name)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`
 
 const CHART_TYPES = [
   { id: 'horizontal', label: 'Poziome',  icon: AlignLeft  },
